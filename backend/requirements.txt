@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-CORS==4.0.0
 python-dotenv==1.0.0
 waitress==3.0.2
-=======
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-Flask-CORS==4.0.0
-python-dotenv==1.0.0
->>>>>>> c085b9df23929dfd5418f4561a9931461c586f30
+

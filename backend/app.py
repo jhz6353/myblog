@@ -82,8 +82,8 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     # 生产环境关闭调试模式
     debug = os.environ.get('FLASK_ENV') == 'development'
-<<<<<<< HEAD
+
     app.run(debug=debug, host='0.0.0.0', port=port)
-=======
+
     app.run(debug=debug, host='0.0.0.0', port=port)
->>>>>>> c085b9df23929dfd5418f4561a9931461c586f30
+
