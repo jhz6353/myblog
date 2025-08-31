@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
-// 配置axios基础URL，指向你的Flask后端
-const API_BASE = 'http://localhost:5000/api';
+// 配置axios基础URL，从环境变量读取，如果没有则使用开发环境的默认值
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 function App() {
   const [posts, setPosts] = useState([]);
