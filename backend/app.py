@@ -3,7 +3,12 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS  # 处理跨域请求
 import datetime
-
+try:
+    import pysqlite3 as sqlite3
+    import sys
+    sys.modules['sqlite3'] = sqlite3
+except ImportError:
+    pass
 app = Flask(__name__)
 
 # 从环境变量读取配置，设置默认值用于开发环境
