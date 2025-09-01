@@ -3,19 +3,22 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS  # 处理跨域请求
 import datetime
-try:
-    import pysqlite3 as sqlite3
-    import sys
-    sys.modules['sqlite3'] = sqlite3
-except ImportError:
-    pass
+# try:
+#     import pysqlite3 as sqlite3
+#     import sys
+#     sys.modules['sqlite3'] = sqlite3
+# except ImportError:
+#     pass
 app = Flask(__name__)
 
 # 从环境变量读取配置，设置默认值用于开发环境
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///blog.db')
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///blog.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///blog.db')
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 # 初始化扩展
 db = SQLAlchemy(app)
 
