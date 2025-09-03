@@ -26,13 +26,7 @@ db = SQLAlchemy(app)
 
 # 配置CORS - 允许前端域访问
 frontend_url = os.environ.get('FRONTEND_URL', 'https://myblog-beta-five.vercel.app')
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [frontend_url, "http://localhost:5173"],
-        "methods": ["GET", "POST", "PUT", "DELETE"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+CORS(app, origins=[frontend_url, "http://localhost:5173"])
 
 
 # 定义数据模型（数据库表）
