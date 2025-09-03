@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-
 # 从环境变量读取配置，设置默认值用于开发环境
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -51,22 +50,8 @@ with app.app_context():
     db.create_all()
     logger.info("数据库初始化完成")
 
-# ！！！确保CORS配置也应用到OPTIONS方法的预检请求上
-# 例如，为你的路由添加对OPTIONS方法的支持
-@app.route('/api/posts', methods=['GET', 'POST', 'OPTIONS'])  # 添加OPTIONS
-def handle_posts():
-    # 这个函数现在会处理预检请求
-    if request.method == 'OPTIONS':
-        # 对于OPTIONS请求，直接返回200，CORS中间件会处理头部
-        return '', 200
 
-# 同样为带参数的路由添加OPTIONS
-@app.route('/api/posts/<int:post_id>', methods=['GET', 'DELETE', 'OPTIONS'])
-def handle_post(post_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-
-# 添加根路由 - 这是解决404问题的关键
+# 添加根路由
 @app.route('/')
 def index():
     return jsonify({
@@ -80,47 +65,61 @@ def index():
     })
 
 
-# 定义API路由
-# 1. 获取所有文章列表
-@app.route('/api/posts', methods=['GET'])
-def get_posts():
-    posts = Post.query.order_by(Post.created_at.desc()).all()
-    return jsonify([post.to_dict() for post in posts])
-
-
-# 2. 获取单篇文章
-@app.route('/api/posts/<int:post_id>', methods=['GET'])
-def get_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    return jsonify(post.to_dict())
-
-
-# 3. 创建新文章
-@app.route('/api/posts', methods=['POST'])
-def create_post():
-    data = request.get_json()
-    if not data or not 'title' in data or not 'content' in data:
-        return jsonify({"error": "Missing title or content"}), 400
-
-    new_post = Post(title=data['title'], content=data['content'])
-    db.session.add(new_post)
-    db.session.commit()
-    return jsonify(new_post.to_dict()), 201  # 201 Created
-
-
-# 4. (可选) 删除文章
-@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
-def delete_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    db.session.delete(post)
-    db.session.commit()
-    return '', 204  # 204 No Content
-
-
-# 健康检查端点 - Railway等平台可能需要这个
+# 健康检查端点
 @app.route('/health')
 def health_check():
     return jsonify({"status": "healthy", "timestamp": datetime.datetime.utcnow().isoformat()})
+
+
+# 定义API路由 - 确保每个路由都包含OPTIONS方法
+@app.route('/api/posts', methods=['GET', 'POST', 'OPTIONS'])
+def handle_posts():
+    # 处理OPTIONS预检请求
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', frontend_url)
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+
+    # 处理GET请求 - 获取所有文章
+    if request.method == 'GET':
+        posts = Post.query.order_by(Post.created_at.desc()).all()
+        return jsonify([post.to_dict() for post in posts])
+
+    # 处理POST请求 - 创建新文章
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data or not 'title' in data or not 'content' in data:
+            return jsonify({"error": "Missing title or content"}), 400
+
+        new_post = Post(title=data['title'], content=data['content'])
+        db.session.add(new_post)
+        db.session.commit()
+        return jsonify(new_post.to_dict()), 201  # 201 Created
+
+
+@app.route('/api/posts/<int:post_id>', methods=['GET', 'DELETE', 'OPTIONS'])
+def handle_post(post_id):
+    # 处理OPTIONS预检请求
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', frontend_url)
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
+        return response
+
+    # 处理GET请求 - 获取单篇文章
+    if request.method == 'GET':
+        post = Post.query.get_or_404(post_id)
+        return jsonify(post.to_dict())
+
+    # 处理DELETE请求 - 删除文章
+    if request.method == 'DELETE':
+        post = Post.query.get_or_404(post_id)
+        db.session.delete(post)
+        db.session.commit()
+        return '', 204  # 204 No Content
 
 
 if __name__ == '__main__':
