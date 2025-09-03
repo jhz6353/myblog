@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+
 # 从环境变量读取配置，设置默认值用于开发环境
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -24,7 +25,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 db = SQLAlchemy(app)
 
 # 配置CORS - 允许前端域访问
-frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+frontend_url = os.environ.get('FRONTEND_URL', 'https://myblog-beta-five.vercel.app')
 CORS(app, resources={
     r"/api/*": {
         "origins": [frontend_url, "http://localhost:5173"],
@@ -56,6 +57,20 @@ with app.app_context():
     db.create_all()
     logger.info("数据库初始化完成")
 
+# ！！！确保CORS配置也应用到OPTIONS方法的预检请求上
+# 例如，为你的路由添加对OPTIONS方法的支持
+@app.route('/api/posts', methods=['GET', 'POST', 'OPTIONS'])  # 添加OPTIONS
+def handle_posts():
+    # 这个函数现在会处理预检请求
+    if request.method == 'OPTIONS':
+        # 对于OPTIONS请求，直接返回200，CORS中间件会处理头部
+        return '', 200
+
+# 同样为带参数的路由添加OPTIONS
+@app.route('/api/posts/<int:post_id>', methods=['GET', 'DELETE', 'OPTIONS'])
+def handle_post(post_id):
+    if request.method == 'OPTIONS':
+        return '', 200
 
 # 添加根路由 - 这是解决404问题的关键
 @app.route('/')
